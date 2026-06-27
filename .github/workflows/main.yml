@@ -12,16 +12,17 @@ jobs:
     steps:
     - uses: actions/checkout@v4
 
-    - name: Setup .NET
-      uses: actions/setup-dotnet@v4
-      with:
-        dotnet-version: 6.0.x
+    - name: Setup MSBuild
+      uses: microsoft/setup-msbuild@v2
 
-    - name: Restore Project Dependencies
-      run: dotnet restore Palisades.sln
+    - name: Setup NuGet
+      uses: NuGet/setup-nuget@v2
 
-    - name: Build with dotnet
-      run: dotnet build Palisades.sln --configuration Release --no-restore
+    - name: Restore NuGet Packages
+      run: nuget restore Palisades.sln
+
+    - name: Build with MSBuild
+      run: msbuild Palisades.sln /p:Configuration=Release
 
     - name: Upload Build Artifacts
       uses: actions/upload-artifact@v4
