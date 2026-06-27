@@ -1,1 +1,27 @@
+name: Build Palisades
 
+on:
+  push:
+    branches: [ "main" ]
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: windows-latest
+
+    steps:
+    - uses: actions/checkout@v4
+
+    - name: Setup .NET
+      uses: actions/setup-dotnet@v4
+      with:
+        dotnet-version: 6.0.x
+
+    - name: Build with dotnet
+      run: dotnet build Palisades.sln --configuration Release
+
+    - name: Upload Build Artifacts
+      uses: actions/upload-artifact@v4
+      with:
+        name: Custom-Palisades-App
+        path: Palisades.Application/bin/Release/
