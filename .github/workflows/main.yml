@@ -17,8 +17,11 @@ jobs:
       with:
         dotnet-version: 6.0.x
 
+    - name: Restore Project Dependencies
+      run: dotnet restore Palisades.sln
+
     - name: Build with dotnet
-      run: dotnet build Palisades.sln --configuration Release
+      run: dotnet build Palisades.sln --configuration Release --no-restore
 
     - name: Upload Build Artifacts
       uses: actions/upload-artifact@v4
