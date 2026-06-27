@@ -14,7 +14,6 @@ namespace Palisades.View
         [DllImport("user32.dll")]
         private static extern int SetWindowLong(IntPtr hWnd, int nIndex, int dwNewLong);
 
-        // Required API Hook: Safely staples our window handle into the native desktop backdrop shell
         [DllImport("user32.dll", SetLastError = true)]
         private static extern IntPtr SetParent(IntPtr hWndChild, IntPtr hWndNewParent);
 
@@ -32,7 +31,9 @@ namespace Palisades.View
             InitializeComponent();
             DataContext = defaultModel;
             viewModel = defaultModel;
-            Show();
+            
+            // Safe Fix: Wait until the app window is 100% rendered on screen before anchoring
+            this.Loaded += Palisade_Loaded;
         }
 
         protected override void OnSourceInitialized(EventArgs e)
@@ -42,13 +43,25 @@ namespace Palisades.View
             var helper = new WindowInteropHelper(this);
             IntPtr hwnd = helper.Handle;
 
-            // Step 1: Apply our invisible, non-minimizing toolwindow logic
+            // Apply style layout flags immediately on load
             int exStyle = GetWindowLong(hwnd, GWL_EXSTYLE);
             SetWindowLong(hwnd, GWL_EXSTYLE, exStyle | WS_EX_NOACTIVATE | WS_EX_TOOLWINDOW);
+        }
 
-            // Step 2: Bind the app directly to the physical Windows Desktop background manager window handle
+        private void Palisade_Loaded(object sender, RoutedEventArgs e)
+        {
+            var helper = new WindowInteropHelper(this);
+            IntPtr hwnd = helper.Handle;
+
+            // Search for the desktop manager windows safely
             IntPtr desktopHandle = FindWindow("Progman", null);
-            if (desktopHandle != IntPtr.Zero)
+            if (desktopHandle == IntPtr.Zero)
+            {
+                desktopHandle = FindWindow("WorkerW", null); // Windows 11 Fallback layer
+            }
+
+            // Only anchor if handles are explicitly verified, preventing silent application crashes
+            if (hwnd != IntPtr.Zero && desktopHandle != IntPtr.Zero)
             {
                 SetParent(hwnd, desktopHandle);
             }
